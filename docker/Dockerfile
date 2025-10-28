@@ -38,18 +38,13 @@ USER $SEL_UID
 # Set the working directory in the container
 WORKDIR $G4F_DIR
 
-# Copy requirements and install dependencies first
+# Copy requirements and install dependencies
 COPY --chown=$SEL_UID:$SEL_GID requirements.txt $G4F_DIR/
-
-# Upgrade pip and install requirements
 RUN pip install --break-system-packages --upgrade pip \
   && pip install --break-system-packages -r requirements.txt
 
 # Copy the g4f package
 COPY --chown=$SEL_UID:$SEL_GID g4f $G4F_DIR/g4f
-
-# Add g4f to Python path so it can be imported
-ENV PYTHONPATH="${G4F_DIR}:${PYTHONPATH}"
 
 # Expose ports
 EXPOSE 8080 7900
