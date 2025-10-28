@@ -1,13 +1,13 @@
 FROM selenium/node-chrome
 ARG G4F_VERSION
-ENV G4F_VERSION $G4F_VERSION
+ENV G4F_VERSION=${G4F_VERSION:-0.1.0}
 ENV SE_SCREEN_WIDTH 1850
 ENV G4F_DIR /app
 ENV G4F_LOGIN_URL http://localhost:7900/?autoconnect=1&resize=scale&password=secret
 USER root
 
 # If docker compose, install git
-RUN if [ "$G4F_VERSION" = "" ] ; then \
+RUN if [ "$G4F_VERSION" = "0.1.0" ] ; then \
   apt-get -qqy update && \
   apt-get -qqy install git \
   ; fi
@@ -43,8 +43,13 @@ COPY --chown=$SEL_UID:$SEL_GID requirements.txt $G4F_DIR/
 RUN pip install --break-system-packages --upgrade pip \
   && pip install --break-system-packages -r requirements.txt
 
-# Copy the g4f package
+# Copy the entire project (setup.py + g4f + README.md)
+COPY --chown=$SEL_UID:$SEL_GID setup.py $G4F_DIR/
+COPY --chown=$SEL_UID:$SEL_GID README.md $G4F_DIR/
 COPY --chown=$SEL_UID:$SEL_GID g4f $G4F_DIR/g4f
+
+# Install g4f package in editable mode
+RUN pip install --break-system-packages -e .
 
 # Expose ports
 EXPOSE 8080 7900
