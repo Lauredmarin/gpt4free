@@ -38,19 +38,18 @@ USER $SEL_UID
 # Set the working directory in the container
 WORKDIR $G4F_DIR
 
-# Copy the entire project first (including setup.py if it exists)
-COPY --chown=$SEL_UID:$SEL_GID . $G4F_DIR
+# Copy requirements and install dependencies first
+COPY --chown=$SEL_UID:$SEL_GID requirements.txt $G4F_DIR/
 
 # Upgrade pip and install requirements
 RUN pip install --break-system-packages --upgrade pip \
   && pip install --break-system-packages -r requirements.txt
 
-# Install g4f as a package (if setup.py exists)
-# Option 1: If you have a setup.py file
-RUN if [ -f setup.py ]; then pip install --break-system-packages -e . ; fi
+# Copy the g4f package
+COPY --chown=$SEL_UID:$SEL_GID g4f $G4F_DIR/g4f
 
-# Option 2: If no setup.py, install in development mode by adding to PYTHONPATH
-ENV PYTHONPATH="${PYTHONPATH}:${G4F_DIR}"
+# Add g4f to Python path so it can be imported
+ENV PYTHONPATH="${G4F_DIR}:${PYTHONPATH}"
 
 # Expose ports
 EXPOSE 8080 7900
