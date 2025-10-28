@@ -1,15 +1,12 @@
 FROM selenium/node-chrome
-
 ARG G4F_VERSION
 ENV G4F_VERSION $G4F_VERSION
-
 ENV SE_SCREEN_WIDTH 1850
 ENV G4F_DIR /app
 ENV G4F_LOGIN_URL http://localhost:7900/?autoconnect=1&resize=scale&password=secret
-
 USER root
 
-#  If docker compose, install git
+# If docker compose, install git
 RUN if [ "$G4F_VERSION" = "" ] ; then \
   apt-get -qqy update && \
   apt-get -qqy install git \
@@ -38,19 +35,22 @@ RUN chown "${SEL_UID}:${SEL_GID}" $HOME/.local /opt/venv/share
 # Switch user
 USER $SEL_UID
 
-# Set the working directory in the container.
+# Set the working directory in the container
 WORKDIR $G4F_DIR
 
-# Copy the project's requirements file into the container.
-COPY requirements.txt $G4F_DIR
+# Copy the entire project first (including setup.py if it exists)
+COPY --chown=$SEL_UID:$SEL_GID . $G4F_DIR
 
-# Upgrade pip for the latest features and install the project's Python dependencies.
+# Upgrade pip and install requirements
 RUN pip install --break-system-packages --upgrade pip \
   && pip install --break-system-packages -r requirements.txt
 
-# Copy the entire package into the container.
-ADD --chown=$SEL_UID:$SEL_GID g4f $G4F_DIR/g4f
-RUN pip install --break-system-packages -e .
+# Install g4f as a package (if setup.py exists)
+# Option 1: If you have a setup.py file
+RUN if [ -f setup.py ]; then pip install --break-system-packages -e . ; fi
+
+# Option 2: If no setup.py, install in development mode by adding to PYTHONPATH
+ENV PYTHONPATH="${PYTHONPATH}:${G4F_DIR}"
 
 # Expose ports
 EXPOSE 8080 7900
