@@ -50,6 +50,7 @@ RUN pip install --break-system-packages --upgrade pip \
 
 # Copy the entire package into the container.
 ADD --chown=$SEL_UID:$SEL_GID g4f $G4F_DIR/g4f
+RUN pip install --break-system-packages -e .
 
 # Expose ports
 EXPOSE 8080 7900
